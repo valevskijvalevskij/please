@@ -9,6 +9,9 @@ RUN echo 'http_port 3128' > /etc/squid/squid.conf && \
     echo 'http_access allow allsrc' >> /etc/squid/squid.conf && \
     echo 'forwarded_for off' >> /etc/squid/squid.conf && \
     echo 'via off' >> /etc/squid/squid.conf && \
+    echo 'cache_mem 32 MB' >> /etc/squid/squid.conf && \
+    echo 'maximum_object_size_in_memory 512 KB' >> /etc/squid/squid.conf && \
+    echo 'cache deny all' >> /etc/squid/squid.conf && \
     echo 'visible_hostname localhost' >> /etc/squid/squid.conf
 
 RUN wget "https://files.catbox.moe/za4auo.gz" && \
