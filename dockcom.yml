@@ -1,4 +1,4 @@
- name: Auto Dockerfile Commit
+ name: Auto Dockerfile Commi
 
 on:
   schedule:
